@@ -38,7 +38,7 @@ I decided to have 5 tables:
 6. Properties
   > primary key: property_id
 7. Areas
-  > primary key:area_id
+  > primary key: area_id
 
 I had two bridge tables:
 1. emp_areas
