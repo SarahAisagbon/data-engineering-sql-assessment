@@ -2,6 +2,26 @@
 
 In this project, I was tasked with building a new database for a Real Estate Company called MyHomes. I was provided with information about what the company does and the different information that they would like to be included in the database along with how the different information areas relate to each other. 
 
+_MyHomes is a real estate company operating globally, their main area of business lies in 
+buying and selling properties._
+
+_The properties that the company deals in are of five types: houses, flats/apartments, 
+bungalows, land, and commercial property. These properties may be subject to health and 
+safety regulations, which govern how these properties must be build and maintained._
+
+_Each property that MyHomes deals in is the main responsibility of one of the company’s 
+area sales representatives. Each representative, however, may be responsible for a 
+number of different properties. A number of the area sales representatives act as 
+supervisors. Supervisors are directly responsible for managing teams of fellow area sales 
+representatives. An area sales representative may also be responsible for dealing with a 
+number of MyHomes’s customers. Each of the company’s customers will only deal with 
+MyHomes through one particular sales representative. Each sales representative also 
+covers one or more geographical sales areas, for eliciting new business from prospective 
+customers. A number of different sales representatives may cover the same geographical 
+area, but there will always be a single sales representative who acts as the chief
+salesperson for that area, and who is directly responsible to management for sales 
+performance in that area, in terms of hitting sales targets._
+
 ## Part 1
 
 This part of the project was focused on producing a Conceptual, Logical and Physical design for the database, and then writing a SQL script to create the tables. I used db diagrams to create my database design and this is what it looked like:
