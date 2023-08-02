@@ -63,10 +63,9 @@ Because I finished early I decided to write some more questions to test out the 
 
 
 ## Content 
+- SQL Data Engineer Assessment (Module 2) includes the different Entities, Attributes and Datatypes. Also, the database diagram is in the pdf and all the SQL script along with the outputs. For some questions, there are a few ways of answering the questions and I'm not sure which is the most optimised solution.
 
-SQL Data Engineer Assessment (Module 2) includes the different Entities, Attributes and Datatypes. Also, the database diagram is in the pdf and all the SQL script along with the outputs. For some questions, there are a few ways of answering the questions and I'm not sure which is the most optimised solution.
-
-data_engineering_assessment.sql includes all the SQL script.
+- data_engineering_assessment.sql includes all the SQL script.
 
 
 
