@@ -26,19 +26,18 @@ CREATE TABLE employees (
   PRIMARY KEY (emp_no)
 );
 
-CREATE TABLE teams (
-  team_id CHAR(4),
-  emp_no INT NOT NULL,
-  PRIMARY KEY (team_id, emp_no)
-);
-
 CREATE TABLE supervisors (
   super_id CHAR(4), 
   super_emp_no INT NOT NULL, 
-  team_id CHAR(4) NOT NULL,
   from_date DATE NOT NULL, 
   to_date DATE NOT NULL, 
-  PRIMARY KEY (super_id, super_emp_no, team_id)
+  PRIMARY KEY (super_id, super_emp_no)
+);
+
+CREATE TABLE teams (
+  super_id CHAR(4),
+  emp_no INT NOT NULL,
+  PRIMARY KEY (super_id, emp_no)
 );
 
 CREATE TABLE areas (
@@ -62,7 +61,7 @@ CREATE TABLE properties (
   address VARCHAR(120) NOT NULL,
   area_id CHAR(4) NOT NULL,
   salesrep_no INT NOT NULL,
-  price INT,
+  property_price INT,
   PRIMARY KEY (property_id, salesrep_no, area_id),
   UNIQUE KEY (address)
 );
@@ -91,11 +90,13 @@ CREATE TABLE property_reg (
   PRIMARY KEY (property_id, reg_id)
 );
 
-ALTER TABLE teams ADD FOREIGN KEY (emp_no) REFERENCES employees (emp_no);
-
 ALTER TABLE supervisors ADD FOREIGN KEY (team_id) REFERENCES teams (team_id);
 
 ALTER TABLE supervisors ADD FOREIGN KEY (super_emp_no) REFERENCES employees (emp_no);
+
+ALTER TABLE teams ADD FOREIGN KEY (emp_no) REFERENCES employees (emp_no);
+
+ALTER TABLE teams ADD FOREIGN KEY (super_id) REFERENCES supervisors (super_id);
 
 ALTER TABLE areas ADD FOREIGN KEY (chief_emp_no) REFERENCES employees (emp_no);
 
@@ -128,17 +129,17 @@ INSERT INTO employees VALUES (10001, '1988-06-28', 'Oscar', 'Smith', 'M', '2008-
 (10009, '1985-11-11', 'Salvatore', 'Gotti', 'M', '2000-03-10'),
 (10010, '1999-02-14', 'Daire', "O'Conner", 'F', '2020-09-16');
 
-INSERT INTO teams VALUES ('t001', 10001),
-('t001', 10004),
-('t002', 10005), 
-('t002', 10007),
-('t002', 10008),
-('t003', 10002),
-('t003', 10010);
+INSERT INTO supervisors VALUES ('s001', 10003, '2011-12-01', '9999-01-01'),
+('s002', 10006, '2012-12-10', '2015-10-10'), 
+('s003', 10009, '2009-07-01', '2022-12-10');
 
-INSERT INTO supervisors VALUES ('s001', 10003, 't001', '2011-12-01', '9999-01-01'),
-('s002', 10006, 't002', '2012-12-10', '2015-10-10'), 
-('s003', 10009, 't003', '2009-07-01', '2022-12-10');
+INSERT INTO teams VALUES ('s001', 10001),
+('s001', 10004),
+('s002', 10005), 
+('s002', 10007),
+('s002', 10008),
+('s003', 10002),
+('s003', 10010);
 
 INSERT INTO areas VALUES ('a001', 'Rotherhithe', 10003, 5000000, 6000000),
 ('a002', 'Peckham', 10001, 2500000, 2000000),
@@ -177,10 +178,10 @@ INSERT INTO customers VALUES
 ('c0002', 'Rihanna', 'Fenty', 'F', NULL, 10006, 'sell'),
 ('c0003', 'Lebron', 'James', 'M', NULL, 10004, 'sell'),
 ('c0004', 'Cristiano', 'Ronaldo', 'M', 1000000, 10008, 'buy'),
-('c0005', 'Kylian', 'Mbappe', 'F', 3000000, 10005, 'buy'), 
+('c0005', 'Kylian', 'Mbappe', 'M', 3000000, 10005, 'buy'), 
 ('c0006', 'Bukayo', 'Saka', 'M', NULL, 10010, 'sell'),
 ('c0007', 'Ed', 'Sheeran', 'M', NULL, 10007, 'sell'),
-('c0008', 'Zayn', 'Malik', 'F', NULL, 10009, 'sell');
+('c0008', 'Zayn', 'Malik', 'M', NULL, 10009, 'sell');
 
 INSERT INTO regulations VALUES ('BS22', 'Building Safety Act'),
 ('FS22', 'Fire Safety Act'),
@@ -218,13 +219,13 @@ WITH emp_prop AS
 FROM employees e
 LEFT JOIN properties p ON p.salesrep_no = e.emp_no),
 super_name AS
-(SELECT s.super_id, CONCAT(e.first_name, ' ', e.last_name) AS full_name, s.team_id
+(SELECT s.super_id, CONCAT(e.first_name, ' ', e.last_name) AS full_name
 FROM supervisors s
 INNER JOIN employees e ON e.emp_no = s.super_emp_no),
 team_details AS
 (SELECT sn.super_id, sn.full_name AS supervisor_name, CONCAT(e.first_name, ' ', e.last_name) AS team_full_name
 FROM super_name sn
-INNER JOIN teams t ON t.team_id= sn.team_id
+INNER JOIN teams t ON t.super_id= sn.super_id
 INNER JOIN employees e ON e.emp_no = t.emp_no)
 
 SELECT ep.*, td.supervisor_name FROM emp_prop ep
@@ -245,3 +246,74 @@ INNER JOIN areas a ON a.area_id = ea.area_id)
 SELECT ai.*, CONCAT(e.first_name, ' ', e.last_name) AS chief_full_name 
 FROM area_info ai
 INNER JOIN employees e ON e.emp_no = ai.chief_emp_no;
+
+"""
+3. Display all the customers who are buying a house and the details of their sale representative.
+"""
+
+WITH cte AS
+(SELECT c.*, CONCAT(e.first_name, ' ', e.last_name) as salesrep_full_name, 
+e.gender as salesrep_gender, 
+e.birth_date as salesrep_birth_date 
+FROM customers c
+INNER JOIN employees e ON e.emp_no = c.salesrep_no)
+
+SELECT * FROM cte
+WHERE service = 'buy';
+
+"""
+4. Display all properties that are in budget for each customer that’s buying a house.
+"""
+WITH buy_customers AS
+(SELECT * FROM customers
+WHERE service = 'buy')
+
+SELECT bc.*, p.* FROM properties p
+INNER JOIN buy_customers bc ON bc.price = p.property_price;
+
+"""
+5. Display all the customers with properties on sale.
+  a) Original solution
+"""
+SELECT c.*, p.* FROM customers c
+INNER JOIN employees e ON e.emp_no = c.salesrep_no
+INNER JOIN properties p ON p.salesrep_no = e.emp_no
+WHERE c.service = 'buy' AND c.price = p.property_price;
+
+"""
+  b) With CTE
+"""
+WITH cte AS
+(SELECT c.*, p.property_id, p.type, p.address, p.area_id, p.property_price FROM customers c
+INNER JOIN employees e ON e.emp_no = c.salesrep_no
+INNER JOIN properties p ON p.salesrep_no = e.emp_no)
+
+SELECT * FROM cte
+WHERE service = 'buy' AND price = property_price;
+
+"""
+6. For each area, display how many sales representatives cover that area.
+"""
+SELECT a.area_name, COUNT(ea.emp_no) AS total_salesreps
+FROM areas a
+INNER JOIN emp_areas ea ON ea.area_id = a.area_id
+GROUP BY a.area_name;
+
+"""
+7. Display the name of all chief salespeople that met or beat their sales targets.
+"""
+SELECT CONCAT(e.first_name, ' ', e.last_name) AS full_name, a.area_name
+FROM employees e
+INNER JOIN areas a ON a.chief_emp_no = e.emp_no
+WHERE a.performance >= a.target;
+
+"""
+8. Display all the regulations that each property has to abide by.
+"""
+SELECT p.address, p.type, GROUP_CONCAT(r.reg_name)
+FROM properties p
+INNER JOIN property_reg pr ON pr.property_id = p.property_id
+INNER JOIN regulations r ON r.reg_id = pr.reg_id
+GROUP BY p.address;
+
+
